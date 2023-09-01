@@ -57,12 +57,21 @@ def parse_table(table_content):
             continue
         # 去除頓點
         parameter_name = remove_backticks(parameter_name)
+        # 將COMMENT後面的內容抓出
+        try:
+            comment = parameter.split('COMMENT')[1]
+            comment = comment.strip()
+            # 去除單引號
+            comment = comment.replace('\'', '')
+        except IndexError as e:
+            comment = ''
+        parameter_comment = comment
         # 將欄位型態抓出
         parameter_type = parameter.split(' ')[1]
         # 去除括號後面的內容
         parameter_type = parameter_type.split('(')[0]
         #print(parameter_name, parameter_type)
-        fields.append(FieldInfo(parameter_name, covert_type(parameter_type)))
+        fields.append(FieldInfo(parameter_name, covert_type(parameter_type), parameter_comment))
     return TableInfo(table_name, fields)
 
 
@@ -96,20 +105,25 @@ def covert_naming_rule(parameter_name, capital=False):
         # 首字大寫
         if not capital:
             parameter_name = parameter_name[0].lower() + parameter_name[1:]
+    else:
+        # 首字大寫
+        if capital:
+            parameter_name = parameter_name[0].upper() + parameter_name[1:]
     return parameter_name
 
 
 def find_auto_increment(sql_content):
     # 將每個sql語句抓出 (以ALTER TABLE跟AUTO_INCREMENT;分隔)
-    match_pattern = re.compile(r'ALTER TABLE `[^`]+` MODIFY `[^`]+`[^;]+;', re.DOTALL)
+    match_pattern = re.compile(r'ALTER\s+TABLE\s+`[^`]+`\s+MODIFY\s+`[^`]+`\s+[^;]+;', re.DOTALL)
     try:
         match_result = match_pattern.findall(sql_content)
         auto_fields = []
         for match in match_result:
+            print(match)
             # 第三個是table name
-            table_name = match.split(' ')[2]
+            table_name = match.split()[2]
             # 第五個是欄位名稱
-            field_name = match.split(' ')[4]
+            field_name = match.split()[4]
             # 去除頓點
             auto_fields.append(AutoField(remove_backticks(table_name), remove_backticks(field_name)))
         return auto_fields
@@ -132,8 +146,8 @@ def build_java_entity(tables, saved_path, package_name):
     if not package_name.endswith('.entity'):
         package_name += '.entity'
     # 根據package name建立資料夾
-    package_name = package_name.replace('.', '/')
-    saved_path += package_name + '/'
+    package_path = package_name.replace('.', '/')
+    saved_path += package_path + '/'
     # 如果沒有資料夾就建立
     if not os.path.exists(saved_path):
         os.makedirs(saved_path)
@@ -145,7 +159,7 @@ def build_java_entity(tables, saved_path, package_name):
             # 寫入package name
             file.write('package ' + package_name + ';\n')
             file.write('import lombok.Data;\n')
-            file.write('import javax.persistence.*;\n')
+            file.write('import jakarta.persistence.*;;\n')
             if 'BigDecimal' in [field.field_type for field in table.fields]:
                 file.write('import java.math.BigDecimal;\n')
             file.write('\n')
@@ -159,6 +173,8 @@ def build_java_entity(tables, saved_path, package_name):
                     file.write('    @Id\n')
                 if field.auto_increment:
                     file.write('    @GeneratedValue(strategy = GenerationType.IDENTITY)\n')
+                if field.comment != '':
+                    file.write('    /** ' + field.comment + ' **/' + '\n')
                 file.write('    @Column(name = "' + field.name + '")\n')
                 file.write('    private ' + field.field_type + ' ' + covert_naming_rule(field.name, False) + ';\n')
             file.write('}\n')

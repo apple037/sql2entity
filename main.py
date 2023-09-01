@@ -2,7 +2,7 @@ from scripts.parse_sql import parse_sql, build_java_entity,remove_comments
 
 
 def main():
-    with open('texas_poker_local.sql', 'r') as file:
+    with open('test/conquer_world_local.sql', 'r') as file:
         sql_content = file.read()
 
     lines = sql_content.split('\n')
@@ -11,7 +11,7 @@ def main():
     tables = parse_sql(cleaned_sql)
     # 存檔位置
     saved_path = 'output/'
-    package_name = 'com.example.demo'
+    package_name = 'com.locas.conquerworld.core'
     build_java_entity(tables, saved_path, package_name)
 
 

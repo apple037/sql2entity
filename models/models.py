@@ -5,9 +5,10 @@ class TableInfo:
 
 
 class FieldInfo:
-    def __init__(self, name, field_type, auto_increment=False):
+    def __init__(self, name, field_type, comment, auto_increment=False):
         self.name = name
         self.field_type = field_type
+        self.comment = comment
         self.auto_increment = False
 
 
