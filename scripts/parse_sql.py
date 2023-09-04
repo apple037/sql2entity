@@ -8,8 +8,6 @@ def parse_sql(sql_content):
     sql_statements = separate_sql(sql_content)
     # 取得AutoIncrement的部分
     auto_fields = find_auto_increment(sql_content)
-    print(auto_fields[1].table_name)
-    print(auto_fields[1].field_name)
     # 將每個table的欄位抓出
     tables = []
     for sql_statement in sql_statements:
@@ -77,7 +75,7 @@ def parse_table(table_content):
 
 def covert_type(parameter_type):
     if parameter_type == 'bigint':
-        return 'long'
+        return 'Long'
     elif parameter_type == 'varchar':
         return 'String'
     elif parameter_type == 'decimal':
@@ -85,13 +83,13 @@ def covert_type(parameter_type):
     elif parameter_type == 'datetime':
         return 'String'
     elif parameter_type == 'int':
-        return 'int'
+        return 'Integer'
     elif parameter_type == 'tinyint':
         return 'boolean'
     elif parameter_type == 'text':
         return 'String'
     elif parameter_type == 'smallint':
-        return 'int'
+        return 'Integer'
     else:
         raise Exception('unknown type: ' + parameter_type)
 
