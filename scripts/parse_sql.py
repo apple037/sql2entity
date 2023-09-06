@@ -166,13 +166,13 @@ def build_java_entity(tables, saved_path, package_name):
             file.write('@Table(name = "' + table.name + '")\n')
             file.write('public class ' + covert_naming_rule(table.name, True) + ' {\n')
             for field in table.fields:
+                if field.comment != '':
+                    file.write('    /** ' + field.comment + ' **/' + '\n')
                 # 第一個加id
                 if field == table.fields[0]:
                     file.write('    @Id\n')
                 if field.auto_increment:
                     file.write('    @GeneratedValue(strategy = GenerationType.IDENTITY)\n')
-                if field.comment != '':
-                    file.write('    /** ' + field.comment + ' **/' + '\n')
                 file.write('    @Column(name = "' + field.name + '")\n')
                 file.write('    private ' + field.field_type + ' ' + covert_naming_rule(field.name, False) + ';\n')
             file.write('}\n')
